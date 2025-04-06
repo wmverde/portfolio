@@ -3749,47 +3749,6 @@ CABLES.OPS["c9cbb226-46f7-4ca6-8dab-a9d0bdca4331"]={f:Ops.Gl.GLTF.GltfScene_v4,o
 
 // **************************************************************
 // 
-// Ops.Gl.Matrix.Translate
-// 
-// **************************************************************
-
-Ops.Gl.Matrix.Translate= class extends CABLES.Op 
-{
-constructor()
-{
-super(...arguments);
-const op=this;
-const attachments=op.attachments={};
-const
-    render = op.inTrigger("render"),
-    trigger = op.outTrigger("trigger"),
-    x = op.inValue("x"),
-    y = op.inValue("y"),
-    z = op.inValue("z");
-
-const vec = vec3.create();
-
-render.onTriggered = function ()
-{
-    const cgl = op.patch.cg;
-
-    vec3.set(vec, x.get(), y.get(), z.get());
-    cgl.pushModelMatrix();
-    mat4.translate(cgl.mMatrix, cgl.mMatrix, vec);
-    trigger.trigger();
-    cgl.popModelMatrix();
-};
-
-}
-};
-
-CABLES.OPS["1f89ba0e-e7eb-46d7-8c66-7814b7c528b9"]={f:Ops.Gl.Matrix.Translate,objName:"Ops.Gl.Matrix.Translate"};
-
-
-
-
-// **************************************************************
-// 
 // Ops.Gl.Matrix.Transform
 // 
 // **************************************************************
@@ -4140,6 +4099,47 @@ updateUI();
 };
 
 CABLES.OPS["f7673a93-7772-4ade-9d3d-df7174f5258b"]={f:Ops.Gl.Matrix.Camera_v2,objName:"Ops.Gl.Matrix.Camera_v2"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Gl.Matrix.Translate
+// 
+// **************************************************************
+
+Ops.Gl.Matrix.Translate= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+const
+    render = op.inTrigger("render"),
+    trigger = op.outTrigger("trigger"),
+    x = op.inValue("x"),
+    y = op.inValue("y"),
+    z = op.inValue("z");
+
+const vec = vec3.create();
+
+render.onTriggered = function ()
+{
+    const cgl = op.patch.cg;
+
+    vec3.set(vec, x.get(), y.get(), z.get());
+    cgl.pushModelMatrix();
+    mat4.translate(cgl.mMatrix, cgl.mMatrix, vec);
+    trigger.trigger();
+    cgl.popModelMatrix();
+};
+
+}
+};
+
+CABLES.OPS["1f89ba0e-e7eb-46d7-8c66-7814b7c528b9"]={f:Ops.Gl.Matrix.Translate,objName:"Ops.Gl.Matrix.Translate"};
 
 
 
@@ -4500,48 +4500,6 @@ inRender.onTriggered = () =>
 };
 
 CABLES.OPS["e4b4f6c9-483b-486e-abbc-fbc4254a65d1"]={f:Ops.Extension.AmmoPhysics.AmmoDebugRenderer,objName:"Ops.Extension.AmmoPhysics.AmmoDebugRenderer"};
-
-
-
-
-// **************************************************************
-// 
-// Ops.Trigger.SwitchTrigger
-// 
-// **************************************************************
-
-Ops.Trigger.SwitchTrigger= class extends CABLES.Op 
-{
-constructor()
-{
-super(...arguments);
-const op=this;
-const attachments=op.attachments={};
-const NUM_PORTS = 16;
-
-const
-    inIndex = op.inValueInt("Trigger Index", 0),
-    triggerPorts = [],
-    outTrig = op.outTrigger("Trigger out");
-
-for (let i = 0; i < NUM_PORTS; i++)
-{
-    const port = op.inTrigger("Trigger in " + i);
-    port.onTriggered = function () { update(i); };
-    triggerPorts.onChange = function () { update(i); };
-    triggerPorts.push(port);
-}
-
-function update(inputNum)
-{
-    const index = Math.min(Math.max(inIndex.get(), 0), 15);
-    if (inputNum == index) outTrig.trigger();
-}
-
-}
-};
-
-CABLES.OPS["aee29293-0c4f-404d-b724-484bbb57361e"]={f:Ops.Trigger.SwitchTrigger,objName:"Ops.Trigger.SwitchTrigger"};
 
 
 
@@ -5836,398 +5794,6 @@ inTrig.onTriggered = function ()
 };
 
 CABLES.OPS["3ef72802-f192-4955-b93f-800e642cb610"]={f:Ops.Anim.Spring,objName:"Ops.Anim.Spring"};
-
-
-
-
-// **************************************************************
-// 
-// Ops.Gl.Matrix.OrbitControls_v3
-// 
-// **************************************************************
-
-Ops.Gl.Matrix.OrbitControls_v3= class extends CABLES.Op 
-{
-constructor()
-{
-super(...arguments);
-const op=this;
-const attachments=op.attachments={};
-const
-    render = op.inTrigger("render"),
-    minDist = op.inValueFloat("min distance", 1),
-    maxDist = op.inValueFloat("max distance", 999999),
-
-    minRotY = op.inValue("min rot y", 0),
-    maxRotY = op.inValue("max rot y", 0),
-
-    initialRadius = op.inValue("initial radius", 2),
-    initialAxis = op.inValueSlider("initial axis y", 0.5),
-    initialX = op.inValueSlider("initial axis x", 0.25),
-
-    smoothness = op.inValueSlider("Smoothness", 1.0),
-    speedX = op.inValue("Speed X", 1),
-    speedY = op.inValue("Speed Y", 1),
-
-    active = op.inValueBool("Active", true),
-
-    allowPanning = op.inValueBool("Allow Panning", true),
-    allowZooming = op.inValueBool("Allow Zooming", true),
-    allowRotation = op.inValueBool("Allow Rotation", true),
-    restricted = op.inValueBool("restricted", true),
-    inIdentity = op.inBool("Identity", true),
-    inReset = op.inTriggerButton("Reset"),
-
-    trigger = op.outTrigger("trigger"),
-    outRadius = op.outNumber("radius"),
-    outXDeg = op.outNumber("Rot X"),
-    outYDeg = op.outNumber("Rot Y");
-    // outCoords = op.outArray("Eye/Target Pos");
-
-op.setPortGroup("Initial Values", [initialAxis, initialX, initialRadius]);
-op.setPortGroup("Interaction", [smoothness, speedX, speedY]);
-op.setPortGroup("Boundaries", [minRotY, maxRotY, minDist, maxDist]);
-
-const halfCircle = Math.PI;
-const fullCircle = Math.PI * 2;
-
-const
-    vUp = vec3.create(),
-    vCenter = vec3.create(),
-    viewMatrix = mat4.create(),
-    tempViewMatrix = mat4.create(),
-    vOffset = vec3.create(),
-    finalEyeAbs = vec3.create(),
-    tempEye = vec3.create(),
-    finalEye = vec3.create(),
-    tempCenter = vec3.create(),
-    finalCenter = vec3.create();
-
-let eye = vec3.create(),
-    mouseDown = false,
-    radius = 5,
-    lastMouseX = 0, lastMouseY = 0,
-    percX = 0, percY = 0,
-    px = 0,
-    py = 0,
-    divisor = 1,
-    element = null,
-    initializing = true,
-    eyeTargetCoord = [0, 0, 0, 0, 0, 0],
-    lastPy = 0;
-
-op.onDelete = unbind;
-smoothness.onChange = updateSmoothness;
-initialRadius.onChange =
-    inReset.onTriggered = reset;
-
-eye = circlePos(0);
-vec3.set(vCenter, 0, 0, 0);
-vec3.set(vUp, 0, 1, 0);
-updateSmoothness();
-reset();
-
-function reset()
-{
-    let off = 0;
-
-    if (px % fullCircle < -halfCircle)
-    {
-        off = -fullCircle;
-        px %= -fullCircle;
-    }
-    else
-    if (px % fullCircle > halfCircle)
-    {
-        off = fullCircle;
-        px %= fullCircle;
-    }
-    else px %= fullCircle;
-
-    py %= (Math.PI);
-
-    vec3.set(vOffset, 0, 0, 0);
-    vec3.set(vCenter, 0, 0, 0);
-    vec3.set(vUp, 0, 1, 0);
-
-    percX = (initialX.get() * Math.PI * 2 + off);
-    percY = (initialAxis.get() - 0.5);
-
-    radius = initialRadius.get();
-    eye = circlePos(percY);
-}
-
-function updateSmoothness()
-{
-    divisor = smoothness.get() * 10 + 1;
-}
-
-function ip(val, goal)
-{
-    if (initializing) return goal;
-    return val + (goal - val) / divisor;
-}
-
-render.onTriggered = function ()
-{
-    const cgl = op.patch.cg;
-    if (!cgl) return;
-
-    if (!element)
-    {
-        setElement(cgl.canvas);
-        bind();
-    }
-
-    cgl.pushViewMatrix();
-
-    px = ip(px, percX);
-    py = ip(py, percY);
-
-    let degY = (py + 0.5) * 180;
-
-    if (minRotY.get() !== 0 && degY < minRotY.get())
-    {
-        degY = minRotY.get();
-        py = lastPy;
-    }
-    else if (maxRotY.get() !== 0 && degY > maxRotY.get())
-    {
-        degY = maxRotY.get();
-        py = lastPy;
-    }
-    else
-    {
-        lastPy = py;
-    }
-
-    const degX = (px) * CGL.RAD2DEG;
-
-    outYDeg.set(degY);
-    outXDeg.set(degX);
-
-    circlePosi(eye, py);
-
-    vec3.add(tempEye, eye, vOffset);
-    vec3.add(tempCenter, vCenter, vOffset);
-
-    finalEye[0] = ip(finalEye[0], tempEye[0]);
-    finalEye[1] = ip(finalEye[1], tempEye[1]);
-    finalEye[2] = ip(finalEye[2], tempEye[2]);
-
-    finalCenter[0] = ip(finalCenter[0], tempCenter[0]);
-    finalCenter[1] = ip(finalCenter[1], tempCenter[1]);
-    finalCenter[2] = ip(finalCenter[2], tempCenter[2]);
-
-    // eyeTargetCoord[0] = finalEye[0];
-    // eyeTargetCoord[1] = finalEye[1];
-    // eyeTargetCoord[2] = finalEye[2];
-    // eyeTargetCoord[3] = finalCenter[0];
-    // eyeTargetCoord[4] = finalCenter[1];
-    // eyeTargetCoord[5] = finalCenter[2];
-    // outCoords.setRef(eyeTargetCoord);
-
-    const empty = vec3.create();
-
-    if (inIdentity.get()) mat4.identity(cgl.vMatrix);
-
-    mat4.lookAt(viewMatrix, finalEye, finalCenter, vUp);
-    mat4.rotate(viewMatrix, viewMatrix, px, vUp);
-
-    // finaly multiply current scene viewmatrix
-    mat4.multiply(cgl.vMatrix, cgl.vMatrix, viewMatrix);
-
-    trigger.trigger();
-    cgl.popViewMatrix();
-    initializing = false;
-};
-
-function circlePosi(vec, perc)
-{
-    if (radius < minDist.get()) radius = minDist.get();
-    if (radius > maxDist.get()) radius = maxDist.get();
-
-    outRadius.set(radius);
-
-    let i = 0, degInRad = 0;
-
-    degInRad = 360 * perc / 2 * CGL.DEG2RAD;
-    vec3.set(vec,
-        Math.cos(degInRad) * radius,
-        Math.sin(degInRad) * radius,
-        0);
-    return vec;
-}
-
-function circlePos(perc)
-{
-    if (radius < minDist.get())radius = minDist.get();
-    if (radius > maxDist.get())radius = maxDist.get();
-
-    outRadius.set(radius);
-
-    let i = 0, degInRad = 0;
-    const vec = vec3.create();
-    degInRad = 360 * perc / 2 * CGL.DEG2RAD;
-    vec3.set(vec,
-        Math.cos(degInRad) * radius,
-        Math.sin(degInRad) * radius,
-        0);
-    return vec;
-}
-
-function onmousemove(event)
-{
-    if (!mouseDown) return;
-
-    const x = event.clientX;
-    const y = event.clientY;
-
-    let movementX = (x - lastMouseX);
-    let movementY = (y - lastMouseY);
-
-    movementX *= speedX.get();
-    movementY *= speedY.get();
-
-    if (event.buttons == 2 && allowPanning.get())
-    {
-        vOffset[2] += movementX * 0.01;
-        vOffset[1] += movementY * 0.01;
-    }
-    else
-    if (event.buttons == 4 && allowZooming.get())
-    {
-        radius += movementY * 0.05;
-        eye = circlePos(percY);
-    }
-    else
-    {
-        if (allowRotation.get())
-        {
-            percX += movementX * 0.003;
-            percY += movementY * 0.002;
-
-            if (restricted.get())
-            {
-                if (percY > 0.5)percY = 0.5;
-                if (percY < -0.5)percY = -0.5;
-            }
-        }
-    }
-
-    lastMouseX = x;
-    lastMouseY = y;
-}
-
-function onMouseDown(event)
-{
-    lastMouseX = event.clientX;
-    lastMouseY = event.clientY;
-    mouseDown = true;
-
-    try { element.setPointerCapture(event.pointerId); }
-    catch (e) {}
-}
-
-function onMouseUp(e)
-{
-    mouseDown = false;
-
-    try { element.releasePointerCapture(e.pointerId); }
-    catch (e) {}
-}
-
-function lockChange()
-{
-    const el = op.patch.cg.canvas;
-
-    if (document.pointerLockElement === el || document.mozPointerLockElement === el || document.webkitPointerLockElement === el)
-        document.addEventListener("mousemove", onmousemove, false);
-}
-
-function onMouseEnter(e)
-{
-}
-
-initialX.onChange = function ()
-{
-    px = percX = (initialX.get() * Math.PI * 2);
-};
-
-initialAxis.onChange = function ()
-{
-    py = percY = (initialAxis.get() - 0.5);
-    eye = circlePos(percY);
-};
-
-const onMouseWheel = function (event)
-{
-    if (allowZooming.get())
-    {
-        const delta = CGL.getWheelSpeed(event) * 0.06;
-        radius += (parseFloat(delta)) * 1.2;
-        eye = circlePos(percY);
-    }
-};
-
-const ontouchstart = function (event)
-{
-    if (event.touches && event.touches.length > 0) onMouseDown(event.touches[0]);
-};
-
-const ontouchend = function (event)
-{
-    onMouseUp();
-};
-
-const ontouchmove = function (event)
-{
-    if (event.touches && event.touches.length > 0) onmousemove(event.touches[0]);
-};
-
-active.onChange = function ()
-{
-    if (active.get())bind();
-    else unbind();
-};
-
-function setElement(ele)
-{
-    unbind();
-    element = ele;
-    bind();
-}
-
-function bind()
-{
-    if (!element) return;
-    if (!active.get()) return unbind();
-
-    element.addEventListener("pointermove", onmousemove);
-    element.addEventListener("pointerdown", onMouseDown);
-    element.addEventListener("pointerup", onMouseUp);
-    element.addEventListener("pointerleave", onMouseUp);
-    element.addEventListener("pointerenter", onMouseEnter);
-    element.addEventListener("contextmenu", function (e) { e.preventDefault(); });
-    element.addEventListener("wheel", onMouseWheel, { "passive": true });
-}
-
-function unbind()
-{
-    if (!element) return;
-
-    element.removeEventListener("pointermove", onmousemove);
-    element.removeEventListener("pointerdown", onMouseDown);
-    element.removeEventListener("pointerup", onMouseUp);
-    element.removeEventListener("pointerleave", onMouseUp);
-    element.removeEventListener("pointerenter", onMouseUp);
-    element.removeEventListener("wheel", onMouseWheel);
-}
-
-}
-};
-
-CABLES.OPS["0655b098-d2a8-4ce2-a0b9-ecb2c78f873a"]={f:Ops.Gl.Matrix.OrbitControls_v3,objName:"Ops.Gl.Matrix.OrbitControls_v3"};
 
 
 
@@ -9512,67 +9078,6 @@ CABLES.OPS["01380a50-2dbb-4465-ae80-86349b0b717a"]={f:Ops.Gl.GradientTexture,obj
 
 // **************************************************************
 // 
-// Ops.Gl.ImageCompose.Levels_v2
-// 
-// **************************************************************
-
-Ops.Gl.ImageCompose.Levels_v2= class extends CABLES.Op 
-{
-constructor()
-{
-super(...arguments);
-const op=this;
-const attachments=op.attachments={"levels_frag":"IN vec2 texCoord;\r\nUNI sampler2D tex;\r\nUNI float inMin;\r\nUNI float inMax;\r\nUNI float midPoint;\r\nUNI float outMax;\r\nUNI float outMin;\r\n\r\nvoid main()\r\n{\r\n    vec4 baseRGBA=texture(tex,texCoord);\r\n    vec3 base=baseRGBA.rgb;\r\n    vec3 inputRange = min(max(base - vec3(inMin), vec3(0.0)) / (vec3(inMax) - vec3(inMin)), vec3(outMax));\r\n\r\n    inputRange = pow(inputRange, vec3(1.0 / (1.5 - midPoint)));\r\n\r\n    outColor= vec4(mix(vec3(outMin), vec3(1.0), inputRange) ,baseRGBA.a);\r\n}",};
-const
-    render = op.inTrigger("Render"),
-
-    inMin = op.inValueSlider("In Min", 0),
-    inMid = op.inValueSlider("Midpoint", 0.5),
-    inMax = op.inValueSlider("In Max", 1),
-
-    outMin = op.inValueSlider("Out Min", 0),
-    outMax = op.inValueSlider("Out Max", 1),
-
-    trigger = op.outTrigger("Next");
-
-const cgl = op.patch.cgl;
-const shader = new CGL.Shader(cgl, op.name, op);
-
-const
-    uniInMin = new CGL.Uniform(shader, "f", "inMin", inMin),
-    uniInMid = new CGL.Uniform(shader, "f", "midPoint", inMid),
-    uniInMax = new CGL.Uniform(shader, "f", "inMax", inMax),
-    uniOutMin = new CGL.Uniform(shader, "f", "outMin", outMin),
-    uniOutMax = new CGL.Uniform(shader, "f", "outMax", outMax),
-    textureUniform = new CGL.Uniform(shader, "t", "tex", 0);
-
-shader.setSource(shader.getDefaultVertexShader(), attachments.levels_frag);
-
-render.onTriggered = function ()
-{
-    if (!CGL.TextureEffect.checkOpInEffect(op, 3)) return;
-
-    cgl.pushShader(shader);
-    cgl.currentTextureEffect.bind();
-
-    cgl.setTexture(0, cgl.currentTextureEffect.getCurrentSourceTexture().tex);
-
-    cgl.currentTextureEffect.finish();
-    cgl.popShader();
-
-    trigger.trigger();
-};
-
-}
-};
-
-CABLES.OPS["cf49063c-a010-4e2b-add6-f8dea50392b5"]={f:Ops.Gl.ImageCompose.Levels_v2,objName:"Ops.Gl.ImageCompose.Levels_v2"};
-
-
-
-
-// **************************************************************
-// 
 // Ops.Gl.ImageCompose.Noise.SimplexNoise_v2
 // 
 // **************************************************************
@@ -11802,79 +11307,6 @@ CABLES.OPS["cedffacf-0f09-4342-bd21-540bd9c8037d"]={f:Ops.Devices.TouchScreen,ob
 
 // **************************************************************
 // 
-// Ops.Gl.Matrix.ScreenPosTo3d_v3
-// 
-// **************************************************************
-
-Ops.Gl.Matrix.ScreenPosTo3d_v3= class extends CABLES.Op 
-{
-constructor()
-{
-super(...arguments);
-const op=this;
-const attachments=op.attachments={};
-const
-    exec = op.inTrigger("Exec"),
-    inX = op.inValue("X"),
-    inY = op.inValue("Y"),
-    inputType = op.inSwitch("Input Type", ["Pixel", "-1 to 1"], "Pixel"),
-    outTrigger = op.outTrigger("Trigger out"),
-    outX = op.outNumber("Result X"),
-    outY = op.outNumber("Result Y");
-
-const mat = mat4.create();
-const cgl = op.patch.cgl;
-
-exec.onTriggered = calc;
-
-let inp = 0;
-inputType.onChange = () =>
-{
-    if (inputType.get() == "Pixel")inp = 0;
-    else if (inputType.get() == "-1 to 1")inp = 1;
-};
-
-function calc()
-{
-    let x = 0;
-    let y = 0;
-
-    let aspect = cgl.canvas.clientWidth / cgl.canvas.clientHeight;
-
-    if (inp === 0) // pixel
-    {
-        x = 2.0 * inX.get() / cgl.canvas.clientWidth - 1;
-        y = -2.0 * inY.get() / cgl.canvas.clientHeight + 1;
-    }
-    else if (inp === 1) // -1 to 1
-    {
-        x = inX.get();
-        y = inY.get();
-    }
-
-    let point3d = vec3.fromValues(x, y, 0);
-
-    mat4.mul(mat, cgl.pMatrix, cgl.vMatrix);
-
-    mat4.invert(mat, mat);
-
-    vec3.transformMat4(point3d, point3d, mat);
-
-    outX.set(point3d[0] * 10);
-    outY.set(point3d[1] * 10);
-    outTrigger.trigger();
-}
-
-}
-};
-
-CABLES.OPS["48d72532-afa6-40c9-a895-00a43635a94b"]={f:Ops.Gl.Matrix.ScreenPosTo3d_v3,objName:"Ops.Gl.Matrix.ScreenPosTo3d_v3"};
-
-
-
-
-// **************************************************************
-// 
 // Ops.Gl.Matrix.ScreenCoordinates_v2
 // 
 // **************************************************************
@@ -11935,59 +11367,6 @@ exec.onTriggered = function ()
 };
 
 CABLES.OPS["adbf5273-3275-490d-9002-e735b81cbb9a"]={f:Ops.Gl.Matrix.ScreenCoordinates_v2,objName:"Ops.Gl.Matrix.ScreenCoordinates_v2"};
-
-
-
-
-// **************************************************************
-// 
-// Ops.Html.WindowInfo
-// 
-// **************************************************************
-
-Ops.Html.WindowInfo= class extends CABLES.Op 
-{
-constructor()
-{
-super(...arguments);
-const op=this;
-const attachments=op.attachments={};
-const
-    outWidth = op.outNumber("clientWidth"),
-    outHeight = op.outNumber("clientHeight"),
-    outHeightBody = op.outNumber("body scroll Height"),
-    outdevicePixelRatio = op.outNumber("Device Pixel Ratio", 1),
-    outIframeChild = op.outBoolNum("Iframe Parent", window.top != window.self),
-    outOrientationAngle = op.outNumber("Orientation Angle", 0),
-    outOrientationType = op.outString("Orientation Type", "");
-
-window.addEventListener("resize", update);
-op.patch.cgl.addEventListener("resize", update);
-
-const mqString = `(resolution: ${window.devicePixelRatio}dppx)`;
-const media = matchMedia(mqString);
-media.addEventListener("change", update);
-
-update();
-
-function update()
-{
-    outWidth.set(window.innerWidth);
-    outHeight.set(window.innerHeight);
-    outdevicePixelRatio.set(window.devicePixelRatio);
-    outHeightBody.set(document.documentElement.scrollHeight);
-
-    if (window.screen && window.screen.orientation)
-    {
-        outOrientationAngle.set(window.screen.orientation.angle || 0);
-        outOrientationType.set(window.screen.orientation.type || "");
-    }
-}
-
-}
-};
-
-CABLES.OPS["9655045c-3539-457d-be65-a1456a58906a"]={f:Ops.Html.WindowInfo,objName:"Ops.Html.WindowInfo"};
 
 
 
@@ -12352,90 +11731,6 @@ CABLES.OPS["6afea9f4-728d-4f3c-9e75-62ddc1448bf0"]={f:Ops.String.StringCompose_v
 
 // **************************************************************
 // 
-// Ops.Html.FullscreenMode
-// 
-// **************************************************************
-
-Ops.Html.FullscreenMode= class extends CABLES.Op 
-{
-constructor()
-{
-super(...arguments);
-const op=this;
-const attachments=op.attachments={};
-const
-    doRequest = op.inTriggerButton("Request Fullscreen"),
-    doExit = op.inTriggerButton("Exit Fullscreen"),
-    inEle = op.inSwitch("Element", ["Canvas", "Document"], "Canvas"),
-    isFullscreen = op.outBoolNum("Is Fullscreen");
-
-doExit.onTriggered = exitFs;
-doRequest.onTriggered = startFs;
-
-let countStarts = 0;
-
-function setState()
-{
-    const isFull = (!window.screenTop && !window.screenY);
-    isFullscreen.set(isFull);
-}
-
-function reqErr(e)
-{
-    op.warn(e);
-}
-
-function startFs()
-{
-    countStarts++;
-    if (countStarts > 30)
-    {
-        doRequest.onTriggered = null;
-        op.setUiAttrib({ "error": "Fullscreen Request shound not triggered that often: op disabled" });
-        exitFs();
-    }
-
-    let elem = null;
-    if (inEle == "Canvas") elem = op.patch.cgl.canvas.parentElement;
-    else elem = op.patch.getDocument().documentElement;
-
-    let prom = null;
-    if (elem.requestFullScreen) prom = elem.requestFullScreen();
-    else if (elem.mozRequestFullScreen) prom = elem.mozRequestFullScreen();
-    else if (elem.webkitRequestFullScreen)prom = elem.webkitRequestFullScreen();
-    else if (elem.msRequestFullScreen)prom = elem.msRequestFullScreen();
-
-    if (prom && prom.catch)prom.catch(reqErr);
-
-    setTimeout(setState, 100);
-    setTimeout(setState, 500);
-    setTimeout(setState, 1000);
-}
-
-function exitFs()
-{
-    countStarts--;
-
-    if (op.patch.getDocument().exitFullscreen) op.patch.getDocument().exitFullscreen().catch(reqErr);
-    else if (op.patch.getDocument().mozCancelFullScreen) op.patch.getDocument().mozCancelFullScreen().catch(reqErr);
-    else if (op.patch.getDocument().webkitExitFullscreen) op.patch.getDocument().webkitExitFullscreen().catch(reqErr);
-    else if (op.patch.getDocument().msExitFullscreen)op.patch.getDocument().msExitFullscreen().catch(reqErr);
-
-    setTimeout(setState, 100);
-    setTimeout(setState, 500);
-    setTimeout(setState, 1000);
-}
-
-}
-};
-
-CABLES.OPS["fe933b35-696d-4738-be03-c0c011ed67a0"]={f:Ops.Html.FullscreenMode,objName:"Ops.Html.FullscreenMode"};
-
-
-
-
-// **************************************************************
-// 
 // Ops.Gl.CanvasInfo_v3
 // 
 // **************************************************************
@@ -12493,6 +11788,789 @@ function update()
 };
 
 CABLES.OPS["be186ff9-427e-409f-b6a4-f8d957bf7bc7"]={f:Ops.Gl.CanvasInfo_v3,objName:"Ops.Gl.CanvasInfo_v3"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Array.Array3
+// 
+// **************************************************************
+
+Ops.Array.Array3= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+const
+    inNum = op.inValueInt("Num Triplets", 100),
+    inX = op.inValueFloat("X", 0),
+    inY = op.inValueFloat("Y", 0),
+    inZ = op.inValueFloat("Z", 0),
+    outArr = op.outArray("Array", null, 3),
+    outTotalPoints = op.outNumber("Total points"),
+    outArrayLength = op.outNumber("Array length");
+
+inNum.onChange =
+    inX.onChange =
+    inY.onChange =
+    inZ.onChange = update;
+
+let arr = [];
+update();
+
+function update()
+{
+    let num = Math.floor(inNum.get() * 3);
+
+    if (num < 0)num = 0;
+    if (arr.length != num) arr.length = num;
+
+    const x = inX.get();
+    const y = inY.get();
+    const z = inZ.get();
+
+    for (let i = 0; i < num; i += 3)
+    {
+        arr[i] = x;
+        arr[i + 1] = y;
+        arr[i + 2] = z;
+    }
+
+    outArr.setRef(arr);
+    outTotalPoints.set(num / 3);
+    outArrayLength.set(num);
+}
+
+}
+};
+
+CABLES.OPS["2766606a-3ea0-4204-8613-b8950a124435"]={f:Ops.Array.Array3,objName:"Ops.Array.Array3"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Array.ArrayMath
+// 
+// **************************************************************
+
+Ops.Array.ArrayMath= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+const inArray_0 = op.inArray("array 0"),
+    NumberIn = op.inValueFloat("Number for math", 0.0),
+    mathSelect = op.inSwitch("Math function", ["+", "-", "*", "/", "%", "min", "max"], "+"),
+    outArray = op.outArray("Array result"),
+    outArrayLength = op.outNumber("Array length");
+
+op.toWorkPortsNeedToBeLinked(inArray_0);
+
+let mathFunc;
+let showingError = false;
+let mathArray = [];
+
+inArray_0.onChange = NumberIn.onChange = update;
+mathSelect.onChange = onFilterChange;
+
+onFilterChange();
+
+inArray_0.onLinkChanged = () =>
+{
+    if (inArray_0) inArray_0.copyLinkedUiAttrib("stride", outArray);
+};
+
+function onFilterChange()
+{
+    let mathSelectValue = mathSelect.get();
+
+    if (mathSelectValue === "+") mathFunc = function (a, b) { return a + b; };
+    else if (mathSelectValue === "-") mathFunc = function (a, b) { return a - b; };
+    else if (mathSelectValue === "*") mathFunc = function (a, b) { return a * b; };
+    else if (mathSelectValue === "/") mathFunc = function (a, b) { return a / b; };
+    else if (mathSelectValue === "%") mathFunc = function (a, b) { return a % b; };
+    else if (mathSelectValue === "min") mathFunc = function (a, b) { return Math.min(a, b); };
+    else if (mathSelectValue === "max") mathFunc = function (a, b) { return Math.max(a, b); };
+    update();
+    op.setUiAttrib({ "extendTitle": mathSelectValue });
+}
+
+function update()
+{
+    let array0 = inArray_0.get();
+
+    mathArray.length = 0;
+
+    if (!array0)
+    {
+        outArrayLength.set(0);
+        outArray.set(null);
+        return;
+    }
+
+    let num = NumberIn.get();
+    mathArray.length = array0.length;
+
+    let i = 0;
+
+    for (i = 0; i < array0.length; i++)
+    {
+        mathArray[i] = mathFunc(array0[i], num);
+    }
+
+    outArray.setRef(mathArray);
+    outArrayLength.set(mathArray.length);
+}
+
+}
+};
+
+CABLES.OPS["c7617717-3114-452f-9625-e4fefd841e88"]={f:Ops.Array.ArrayMath,objName:"Ops.Array.ArrayMath"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Array.Array3GetNumbers
+// 
+// **************************************************************
+
+Ops.Array.Array3GetNumbers= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+const
+    pArr = op.inArray("Array", 3),
+    pIndex = op.inValueInt("Index"),
+    outX = op.outNumber("X"),
+    outY = op.outNumber("Y"),
+    outZ = op.outNumber("Z");
+
+pArr.onChange =
+    pIndex.onChange = update;
+
+function update()
+{
+    let arr = pArr.get();
+    if (!arr)
+    {
+        outX.set(0);
+        outY.set(0);
+        outZ.set(0);
+        return;
+    }
+    let ind = Math.min(arr.length - 3, pIndex.get() * 3);
+    if (arr)
+    {
+        outX.set(arr[ind + 0]);
+        outY.set(arr[ind + 1]);
+        outZ.set(arr[ind + 2]);
+    }
+}
+
+}
+};
+
+CABLES.OPS["56882cc4-c40d-4dc0-bf7c-db1b5a7acad0"]={f:Ops.Array.Array3GetNumbers,objName:"Ops.Array.Array3GetNumbers"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Math.Compare.LessThan
+// 
+// **************************************************************
+
+Ops.Math.Compare.LessThan= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+const number1 = op.inValue("number1");
+const number2 = op.inValue("number2");
+const result = op.outBoolNum("result");
+
+op.setUiAttribs({ "mathTitle": true });
+
+number1.onChange = exec;
+number2.onChange = exec;
+exec();
+
+function exec()
+{
+    result.set(number1.get() < number2.get());
+}
+
+}
+};
+
+CABLES.OPS["04fd113f-ade1-43fb-99fa-f8825f8814c0"]={f:Ops.Math.Compare.LessThan,objName:"Ops.Math.Compare.LessThan"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Array.Array_v3
+// 
+// **************************************************************
+
+Ops.Array.Array_v3= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+const
+    inLength = op.inValueInt("Array length", 10),
+    modeSelect = op.inSwitch("Mode select", ["Number", "1,2,3,4", "0-1"], "Number"),
+    inDefaultValue = op.inValueFloat("Default Value"),
+    inReverse = op.inBool("Reverse", false),
+    outArr = op.outArray("Array"),
+    outArrayLength = op.outNumber("Array length out");
+
+let arr = [];
+let selectIndex = 0;
+const MODE_NUMBER = 0;
+const MODE_1_TO_4 = 1;
+const MODE_0_TO_1 = 2;
+
+modeSelect.onChange = onFilterChange;
+
+inReverse.onChange =
+    inDefaultValue.onChange =
+    inLength.onChange = reset;
+
+onFilterChange();
+reset();
+
+function onFilterChange()
+{
+    let selectedMode = modeSelect.get();
+    if (selectedMode === "Number") selectIndex = MODE_NUMBER;
+    else if (selectedMode === "1,2,3,4") selectIndex = MODE_1_TO_4;
+    else if (selectedMode === "0-1") selectIndex = MODE_0_TO_1;
+
+    inDefaultValue.setUiAttribs({ "greyout": selectIndex !== MODE_NUMBER });
+
+    op.setUiAttrib({ "extendTitle": modeSelect.get() });
+
+    reset();
+}
+
+function reset()
+{
+    arr.length = 0;
+
+    let arrLength = inLength.get();
+    let valueForArray = inDefaultValue.get();
+    let i;
+
+    // mode 0 - fill all array values with one number
+    if (selectIndex === MODE_NUMBER)
+    {
+        for (i = 0; i < arrLength; i++)
+        {
+            arr[i] = valueForArray;
+        }
+    }
+    // mode 1 Continuous number array - increments up to array length
+    else if (selectIndex === MODE_1_TO_4)
+    {
+        for (i = 0; i < arrLength; i++)
+        {
+            arr[i] = i;
+        }
+    }
+    // mode 2 Normalized array
+    else if (selectIndex === MODE_0_TO_1)
+    {
+        if (arrLength > 1) { 
+            for (i = 0; i < arrLength; i++)
+                {
+                    arr[i] = i / (arrLength - 1);
+                }
+        } else 
+        {
+            //When array length is only 1 
+            arr = [0];
+        }
+    }
+
+    if (inReverse.get())arr = arr.reverse();
+
+    outArr.setRef(arr);
+    outArrayLength.set(arr.length);
+}
+
+}
+};
+
+CABLES.OPS["e4d31a46-bf64-42a8-be34-4cbb2bbc2600"]={f:Ops.Array.Array_v3,objName:"Ops.Array.Array_v3"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Array.ArrayGetNumber
+// 
+// **************************************************************
+
+Ops.Array.ArrayGetNumber= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+const
+    array = op.inArray("array"),
+    index = op.inValueInt("index"),
+    valueInvalid = op.inFloat("Value Invalid Index", 0),
+    value = op.outNumber("value"),
+    outValidIndex = op.outBoolNum("Valid Index", true);
+
+array.ignoreValueSerialize = true;
+
+index.onChange = array.onChange = update;
+
+function update()
+{
+    if (array.get())
+    {
+        const input = array.get()[index.get()];
+        if (isNaN(input))
+        {
+            value.set(valueInvalid.get());
+            outValidIndex.set(false);
+        }
+        else
+        {
+            outValidIndex.set(true);
+            value.set(parseFloat(input));
+        }
+    }
+}
+
+}
+};
+
+CABLES.OPS["d1189078-70cf-437d-9a37-b2ebe89acdaf"]={f:Ops.Array.ArrayGetNumber,objName:"Ops.Array.ArrayGetNumber"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Array.ArraySetNumber_v3
+// 
+// **************************************************************
+
+Ops.Array.ArraySetNumber_v3= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+const
+    inArray = op.inArray("Array"),
+    inIndex = op.inInt("Index", 0),
+    inValue = op.inFloat("Number", 1),
+    outArray = op.outArray("Result");
+
+let arr = [];
+op.toWorkPortsNeedToBeLinked(inArray);
+
+inArray.onChange =
+    inIndex.onChange =
+    inValue.onChange = update;
+
+function update()
+{
+    const srcArr = inArray.get();
+
+    if (!srcArr)
+    {
+        outArray.set(null);
+        return;
+    }
+
+    arr.length = srcArr.length;
+    const idx = inIndex.get();
+
+    for (let i = 0; i < srcArr.length; i++)
+    {
+        if (idx === i)arr[i] = inValue.get();
+        else arr[i] = srcArr[i];
+    }
+
+    outArray.setRef(arr);
+}
+
+}
+};
+
+CABLES.OPS["1a71327d-fe88-4796-9ebd-5a1c1cd083af"]={f:Ops.Array.ArraySetNumber_v3,objName:"Ops.Array.ArraySetNumber_v3"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Math.Abs
+// 
+// **************************************************************
+
+Ops.Math.Abs= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+const
+    number = op.inValue("number"),
+    result = op.outNumber("result");
+
+number.onChange = function ()
+{
+    result.set(Math.abs(number.get()));
+};
+
+}
+};
+
+CABLES.OPS["6b5af21d-065f-44d2-9442-8b7a254753f6"]={f:Ops.Math.Abs,objName:"Ops.Math.Abs"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Gl.GLTF.GltfDracoCompression
+// 
+// **************************************************************
+
+Ops.Gl.GLTF.GltfDracoCompression= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+class DracoDecoderClass
+{
+    constructor()
+    {
+        this.workerLimit = 4;
+        this.workerPool = [];
+        this.workerNextTaskID = 1;
+        this.workerSourceURL = "";
+
+        this.config = {
+            "wasm": Uint8Array.from(atob(DracoDecoderWASM), (c) => { return c.charCodeAt(0); }),
+            "wrapper": DracoWASMWrapperCode,
+            "decoderSettings": {},
+        };
+
+        const dracoWorker = this._DracoWorker.toString();
+        const workerCode = dracoWorker.substring(dracoWorker.indexOf("{") + 1, dracoWorker.lastIndexOf("}"));
+
+        const jsContent = this.config.wrapper;
+        const body = [
+            "/* draco decoder */",
+            jsContent,
+            "",
+            "/* worker */",
+            workerCode
+        ].join("\n");
+
+        this.workerSourceURL = URL.createObjectURL(new Blob([body]));
+    }
+
+    _getWorker(taskID, taskCost)
+    {
+        if (this.workerPool.length < this.workerLimit)
+        {
+            const worker = new Worker(this.workerSourceURL);
+            worker._callbacks = {};
+            worker._taskCosts = {};
+            worker._taskLoad = 0;
+            worker.postMessage({ "type": "init", "decoderConfig": this.config });
+            worker.onmessage = (e) =>
+            {
+                const message = e.data;
+
+                switch (message.type)
+                {
+                case "done":
+                    worker._callbacks[message.taskID].finishedCallback(message.geometry);
+                    break;
+
+                case "error":
+                    worker._callbacks[message.taskID].errorCallback(message);
+                    break;
+
+                default:
+                    op.error("THREE.DRACOLoader: Unexpected message, \"" + message.type + "\"");
+                }
+                this._releaseTask(worker, message.taskID);
+            };
+            this.workerPool.push(worker);
+        }
+        else
+        {
+            this.workerPool.sort(function (a, b)
+            {
+                return a._taskLoad > b._taskLoad ? -1 : 1;
+            });
+        }
+
+        const worker = this.workerPool[this.workerPool.length - 1];
+        worker._taskCosts[taskID] = taskCost;
+        worker._taskLoad += taskCost;
+        return worker;
+    }
+
+    decodeGeometry(buffer, finishedCallback, errorCallback = null)
+    {
+        const taskID = this.workerNextTaskID++;
+        const taskCost = buffer.byteLength;
+
+        const worker = this._getWorker(taskID, taskCost);
+        worker._callbacks[taskID] = { finishedCallback, errorCallback };
+        worker.postMessage({ "type": "decode", "taskID": taskID, buffer }, [buffer]);
+    }
+
+    _releaseTask(worker, taskID)
+    {
+        worker._taskLoad -= worker._taskCosts[taskID];
+        delete worker._callbacks[taskID];
+        delete worker._taskCosts[taskID];
+    }
+
+    _DracoWorker()
+    {
+        let pendingDecoder;
+
+        onmessage = function (e)
+        {
+            const message = e.data;
+            switch (message.type)
+            {
+            case "init":
+                const decoderConfig = message.decoderConfig;
+                const moduleConfig = decoderConfig.decoderSettings;
+                pendingDecoder = new Promise(function (resolve)
+                {
+                    moduleConfig.onModuleLoaded = function (draco)
+                    {
+                        // Module is Promise-like. Wrap before resolving to avoid loop.
+                        resolve({ "draco": draco });
+                    };
+                    moduleConfig.wasmBinary = decoderConfig.wasm;
+                    DracoDecoderModule(moduleConfig); // eslint-disable-line no-undef
+                });
+                break;
+            case "decode":
+                pendingDecoder.then((module) =>
+                {
+                    const draco = module.draco;
+
+                    const f = new draco.Decoder();
+                    const dataBuff = new Int8Array(message.buffer);
+
+                    const geometryType = f.GetEncodedGeometryType(dataBuff);
+                    const buffer = new draco.DecoderBuffer();
+                    buffer.Init(dataBuff, dataBuff.byteLength);
+
+                    let outputGeometry = new draco.Mesh();
+                    const status = f.DecodeBufferToMesh(buffer, outputGeometry);
+                    const attribute = f.GetAttributeByUniqueId(outputGeometry, 1);
+                    const geometry = dracoAttributes(draco, f, outputGeometry, geometryType, name);
+
+                    this.postMessage({ "type": "done", "taskID": message.taskID, "geometry": geometry });
+
+                    draco.destroy(f);
+                    draco.destroy(buffer);
+                });
+                break;
+            }
+        };
+
+        let dracoAttributes = function (draco, decoder, dracoGeometry, geometryType, name)
+        {
+            const attributeIDs = {
+                "position": draco.POSITION,
+                "normal": draco.NORMAL,
+                "color": draco.COLOR,
+                "uv": draco.TEX_COORD,
+                "joints": draco.GENERIC,
+                "weights": draco.GENERIC,
+            };
+            const attributeTypes = {
+                "position": "Float32Array",
+                "normal": "Float32Array",
+                "color": "Float32Array",
+                "weights": "Float32Array",
+                "joints": "Uint8Array",
+                "uv": "Float32Array"
+            };
+
+            const geometry = {
+                "index": null,
+                "attributes": []
+            };
+
+            let count = 0;
+            for (const attributeName in attributeIDs)
+            {
+                const attributeType = attributeTypes[attributeName];
+                let attributeID = decoder.GetAttributeId(dracoGeometry, attributeIDs[attributeName]);
+
+                count++;
+                if (attributeID != -1)
+                {
+                    let attribute = decoder.GetAttribute(dracoGeometry, attributeID);
+                    geometry.attributes.push(decodeAttribute(draco, decoder, dracoGeometry, attributeName, attributeType, attribute));
+                }
+            }
+
+            if (geometryType === draco.TRIANGULAR_MESH) geometry.index = decodeIndex(draco, decoder, dracoGeometry);
+            else op.warn("unknown draco geometryType", geometryType);
+
+            draco.destroy(dracoGeometry);
+            return geometry;
+        };
+
+        let decodeIndex = function (draco, decoder, dracoGeometry)
+        {
+            const numFaces = dracoGeometry.num_faces();
+            const numIndices = numFaces * 3;
+            const byteLength = numIndices * 4;
+            const ptr = draco._malloc(byteLength);
+
+            decoder.GetTrianglesUInt32Array(dracoGeometry, byteLength, ptr);
+            const index = new Uint32Array(draco.HEAPF32.buffer, ptr, numIndices).slice();
+
+            draco._free(ptr);
+
+            return {
+                "array": index,
+                "itemSize": 1
+            };
+        };
+
+        let decodeAttribute = function (draco, decoder, dracoGeometry, attributeName, attributeType, attribute)
+        {
+            let bytesPerElement = 4;
+            if (attributeType === "Float32Array") bytesPerElement = 4;
+            else if (attributeType === "Uint8Array") bytesPerElement = 1;
+            else op.warn("unknown attrtype bytesPerElement", attributeType);
+
+            const numComponents = attribute.num_components();
+            const numPoints = dracoGeometry.num_points();
+            const numValues = numPoints * numComponents;
+            const byteLength = numValues * bytesPerElement;
+            const dataType = getDracoDataType(draco, attributeType);
+            const ptr = draco._malloc(byteLength);
+            let array = null;
+
+            decoder.GetAttributeDataArrayForAllPoints(dracoGeometry, attribute, dataType, byteLength, ptr);
+
+            if (attributeType === "Float32Array") array = new Float32Array(draco.HEAPF32.buffer, ptr, numValues).slice();
+            else if (attributeType === "Uint8Array") array = new Uint8Array(draco.HEAPF32.buffer, ptr, numValues).slice();
+            else op.warn("unknown attrtype", attributeType);
+
+            draco._free(ptr);
+
+            return {
+                "name": attributeName,
+                "array": array,
+                "itemSize": numComponents
+            };
+        };
+
+        let getDracoDataType = function (draco, attributeType)
+        {
+            switch (attributeType)
+            {
+            case "Float32Array": return draco.DT_FLOAT32;
+            case "Int8Array": return draco.DT_INT8;
+            case "Int16Array": return draco.DT_INT16;
+            case "Int32Array": return draco.DT_INT32;
+            case "Uint8Array": return draco.DT_UINT8;
+            case "Uint16Array": return draco.DT_UINT16;
+            case "Uint32Array": return draco.DT_UINT32;
+            }
+        };
+    }
+}
+
+window.DracoDecoder = new DracoDecoderClass();
+
+}
+};
+
+CABLES.OPS["4ecdc2ef-a242-4548-ad74-13f617119a64"]={f:Ops.Gl.GLTF.GltfDracoCompression,objName:"Ops.Gl.GLTF.GltfDracoCompression"};
+
+
+
+
+// **************************************************************
+// 
+// Ops.Local.ISIPAD
+// 
+// **************************************************************
+
+Ops.Local.ISIPAD= class extends CABLES.Op 
+{
+constructor()
+{
+super(...arguments);
+const op=this;
+const attachments=op.attachments={};
+// welcome to your new op!
+// have a look at the documentation:
+// https://cables.gl/docs/5_writing_ops/dev_ops/dev_ops
+
+const myString = op.inString("Input", "default string");
+const result = op.outBoolNum("Result");
+
+myString.onChange = update;
+
+
+function update() {
+    const inVal = myString.get();
+
+    if (inVal.includes("iPad")) result.set(true);
+
+    else result.set(false);
+}
+
+
+}
+};
+
+CABLES.OPS["84874a11-30d7-4d9e-ad6e-7652b66311c0"]={f:Ops.Local.ISIPAD,objName:"Ops.Local.ISIPAD"};
 
 
 

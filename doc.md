@@ -3,6 +3,10 @@
 * __ammo_char_scale_x__ ```Number```
 * __ammo_char_scale_y__ ```Number```
 * __ammo_char_scale_z__ ```Number```
+* __ammo_Linkedin_icons_size__ ```Array```
+* __ammo_mail_icons_size__ ```Array```
+* __ammo_skills_icons_h__ ```Array```
+* __ammo_soft_icons_size__ ```Array```
 * __Array4_icons_anim_0__ ```Array```
 * __Array4_icons_anim_1__ ```Array```
 * __Array4_icons_anim_2__ ```Array```
@@ -25,9 +29,13 @@
 * __over_map__ ```Number```
 * __over_visual__ ```Number```
 * __radius_ammo_icons__ ```Number```
-* __radius_ammo_soft__ ```Number```
 * __RATIO_SCALE__ ```Number```
+* __RATIO_VERTICAL__ ```Number```
+* __SCREEN_IS_VERTICAL__ ```Number```
 * __scroll__ ```Number```
+* __SCROLL_MAX__ ```Number```
+* __SCROLL_MIN__ ```Number```
+* __sections_height__ ```Array```
 * __TIME__ ```Number```
 * __vide_inst__ ```Texture```
 * __video_3d__ ```Texture```
